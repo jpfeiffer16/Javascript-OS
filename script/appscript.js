@@ -27,7 +27,7 @@ $('document').ready(function() {
 		}
 	});
     
-    windowManager.initWindow('test', true);
+    //windowManager.initWindow('test', true);
     $('#mainmenu ul li').on('click', function() {
         windowManager.runProgram($(this).text());
     });
@@ -74,7 +74,7 @@ var windowManager = {
 		}
 		var code = storageManager.getText(programName);
 		DOMManager.insertScript(code, programName);
-		DOMManager.runScript(programName);
+		DOMManager.runScript(programName, programName);
 	},
 	checkIfOpen : function(thisWindow) {
 		if($('#pgrm-' + thisWindow).length < 1) {
@@ -97,8 +97,8 @@ var windowManager = {
 	    );
 	    windowManager.initWindow(programName, false);
         var code = storageManager.getText('dialog');
-        DOMManager.insertScript(code, 'dialog');
-        DOMManager.runScript('dialog');
+        DOMManager.insertScript(code, 'f' + programName);
+        DOMManager.runScript('f' + programName, programName);
 	}
 }
 
@@ -111,10 +111,11 @@ var DOMManager = {
 		programName = replaceChar(replaceChar(programName, ' ', '_'), '#', '');
 		$('body').remove('#scrp-' + programName);
 	},
-	runScript : function(programName) {
+	runScript : function(programName, windowAccess) {
 		programName = replaceChar(replaceChar(programName, ' ', '_'), '#', '');
-		window[programName]($('#pgrm-' + programName));
-		console.log($('#pgrm-' + programName));
+		window[programName]($('#pgrm-' + windowAccess));
+		console.log(windowAccess);
+        console.log('this is it ^');
 	}
 }
 
@@ -147,9 +148,7 @@ function startTime() {
 	$('#time').text(timestring);
 }
 
-function getValue(keyName) {
-    return storageManager.getText('test');
-}
+
 
 function replaceChar(text, thisChar, replaceWith) {
 	var textFound = text.indexOf(thisChar);
@@ -173,15 +172,15 @@ function replaceChar(text, thisChar, replaceWith) {
 
 
 //JS constructor:'
-    function Test() {
-    var thisWindow = $('a');
-
-    var windwWidth = thisWindow.width();
-    var windwHeight = thisWindow.height();
-    var button = thisWindow.children('#ok-button');
-    button.height(50);
-    button.width(windwWidth * .5);
-    button.offset({left : thisWindow.offset().left + (widowWidth/2 - button.width()/2), top : thisWindow.offset().top + windwHeight - 60});
-
-    "var windwWidth = thisWindow.width();var windwHeight = thisWindow.height();var button = thisWindow.children('#ok-button');button.height(50);button.width(windwWidth * .5);button.offset({left : thisWindow.offset().left + (widowWidth/2 - button.width()/2), top : thisWindow.offset().top + windwHeight - 60});"
-}
+//    function Test() {
+//    var thisWindow = $('a');
+//
+//    var windwWidth = thisWindow.width();
+//    var windwHeight = thisWindow.height();
+//    var button = thisWindow.children('#ok-button');
+//    button.height(50);
+//    button.width(windwWidth * .5);
+//    button.offset({left : thisWindow.offset().left + (widowWidth/2 - button.width()/2), top : thisWindow.offset().top + windwHeight - 60});
+//
+//    "var windwWidth = thisWindow.width();var windwHeight = thisWindow.height();var button = thisWindow.children('#ok-button');button.height(50);button.width(windwWidth * .5);button.offset({left : thisWindow.offset().left + (widowWidth/2 - button.width()/2), top : thisWindow.offset().top + windwHeight - 60});"
+//}
