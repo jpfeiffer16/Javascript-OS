@@ -101,8 +101,8 @@ var windowManager = {
         DOMManager.runScript('f' + programName, programName);
 	},
 	newButton : function(thisWindow, buttonName, buttonText, x, y ,width, height) {
-		altert(thisWindow + buttonName + buttonText + x + y + width + height);
-		var button = thisWindow.append('<button>' + buttonText + '</button>');
+		alert(thisWindow + buttonName + buttonText + x + y + width + height);
+		var button = thisWindow.children('.window-content').append('<button>' + buttonText + '</button>');
 		button.width(width);
 		button.height(height);
 		button.attr('id', buttonName);
@@ -134,7 +134,7 @@ var storageManager = {
         if(keyString == 'dialog') {
 		  	return "console.log(thisWindow.attr('id'));var windowWidth = thisWindow.width();console.log(windowWidth);var windowHeight = thisWindow.height();var button = thisWindow.children('#ok-button');button.height(50);button.width(windowWidth * .5);button.offset({left : thisWindow.offset().left + (windowWidth/2 - button.width()/2), top : thisWindow.offset().top + windowHeight - 60});";
         } else if(keyString == 'Program_5') {
-        	return "storageManager.newButton(thisWindow, 'btn-test', 'test', 60, 60, 60, 60);"
+        	return "windowManager.newButton(thisWindow, 'btn-test', 'test', 60, 60, 60, 60);"
         } else {
         	return "alert(thisWindow.attr('id'))";
         }
