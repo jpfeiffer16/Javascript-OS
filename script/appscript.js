@@ -100,14 +100,20 @@ var windowManager = {
         DOMManager.insertScript(code, 'f' + programName);
         DOMManager.runScript('f' + programName, programName);
 	},
-	newButton : function(thisWindow, buttonName, buttonText, x, y ,width, height) {
-		alert(thisWindow + buttonName + buttonText + x + y + width + height);
-		var button = thisWindow.children('.window-content').append('<button>' + buttonText + '</button>');
-		button.width(width);
-		button.height(height);
-		button.attr('id', buttonName);
-		button.offset({top : thisWindow.offset().top + y, left : thisWindow.offset().left + x});
-		return button;
+	newControl : function(controlType, thisWindow, controlName, controlText, x, y ,width, height) {
+		thisWindow.children('.window-content').append('<' + controlType + ' id="' + controlName + '">' + controlText + '</' + controlType + '>');
+		var element = $('#' + thisWindow.attr('id') + ' #' + controlName);
+		var contentArea = thisWindow.children('.window-content');
+		element.css('position','relative');
+		element.width(width);
+		element.height(height);
+		element.offset({top : contentArea.offset().top + y, left : contentArea.offset().left + x});
+		switch(controlType) {
+			case 'textarea':
+				element.css('resize', 'none');
+				break;
+		}
+		return element;
 	}
 
 }
@@ -115,7 +121,7 @@ var windowManager = {
 var DOMManager = {
 	insertScript : function(script, programName) {
 		programName = replaceChar(replaceChar(programName, ' ', '_'), '#', '');
-		$('body').append('<script id="scrp-' + programName + '">function ' + programName + '(thisWindow) {var thisWindow = $("#" + thisWindow.attr("id"));console.log(thisWindow);' + script + '}</script>')
+		$('body').append('<script id="scrp-' + programName + '">function ' + programName + '(thisWindow) {var thisWindow = $("#" + thisWindow.attr("id"));var contentArea = thisWindow.children(".window-content");' + script + '}</script>')
 	},
 	removeScript : function(programName) {
 		programName = replaceChar(replaceChar(programName, ' ', '_'), '#', '');
@@ -133,11 +139,15 @@ var storageManager = {
 	getText : function(keyString) {
         if(keyString == 'dialog') {
 		  	return "console.log(thisWindow.attr('id'));var windowWidth = thisWindow.width();console.log(windowWidth);var windowHeight = thisWindow.height();var button = thisWindow.children('#ok-button');button.height(50);button.width(windowWidth * .5);button.offset({left : thisWindow.offset().left + (windowWidth/2 - button.width()/2), top : thisWindow.offset().top + windowHeight - 60});";
-        } else if(keyString == 'Program_5') {
-        	return "windowManager.newButton(thisWindow, 'btn-test', 'test', 60, 60, 60, 60);"
-        } else {
-        	return "alert(thisWindow.attr('id'))";
+        // } else if(keyString == 'Program_5') {
+        // 	return "var textArea = windowManager.newControl('textarea', thisWindow, 'txtInput', 'Test', 5, 5, contentArea.width() - 30, contentArea.height() - 30);"
+        } 
+        else {
+        	var code = localStorage.getItem('pgrm-Program_5');
+        	//alert(code);
+        	return code;
         }
+
 	}
 }
 
@@ -196,3 +206,17 @@ function replaceChar(text, thisChar, replaceWith) {
 //
 //    "var windwWidth = thisWindow.width();var windwHeight = thisWindow.height();var button = thisWindow.children('#ok-button');button.height(50);button.width(windwWidth * .5);button.offset({left : thisWindow.offset().left + (widowWidth/2 - button.width()/2), top : thisWindow.offset().top + windwHeight - 60});"
 //}
+
+
+
+function test() {
+    thisWindow.width(500);
+    thisWindow.height(500);
+    windowManager.initWindow(thisWindow.attr('id').substring(5,thisWindow.attr('id').length));
+	var textArea = windowManager.newControl("textarea", thisWindow, "txtInput", "Test", 5, 5, contentArea.width() - 15, contentArea.height() - 40);
+	var getInputButton = windowManager.newControl("button", thisWindow, "btnGetInput", "Get Input", contentArea.width()/2 - 40, contentArea.height() -28, 70, 20)
+    .on('click', function() {
+        windowManager.newDialog('Text', textArea.val());
+    });
+    //var getInputButton = windowManager.newControl("button", thisWindow, "btnGetInput", "Get Input", 2, 2, 60, 30);
+}

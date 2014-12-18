@@ -158,3 +158,7 @@ span:hover {
 #pgrm-test {
     display: none;
 }
+
+button {
+    opacity: 1;
+}
