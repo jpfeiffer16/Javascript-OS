@@ -213,10 +213,23 @@ function test() {
     thisWindow.width(500);
     thisWindow.height(500);
     windowManager.initWindow(thisWindow.attr('id').substring(5,thisWindow.attr('id').length));
-	var textArea = windowManager.newControl("textarea", thisWindow, "txtInput", "Test", 5, 5, contentArea.width() - 15, contentArea.height() - 40);
-	var getInputButton = windowManager.newControl("button", thisWindow, "btnGetInput", "Get Input", contentArea.width()/2 - 40, contentArea.height() -28, 70, 20)
+    windowManager.newControl("h4", thisWindow, "programNameLabel", "Program Name:", 5, 5, 120, 20);
+    var programName = windowManager.newControl("input type='text'", thisWindow, "programName", "Test_Program", 150, 5, 120, 20);
+	var textArea = CodeMirror(contentArea[0]);
+    textArea = $(textArea);
+	var saveButton = windowManager.newControl("button", thisWindow, "saveBtn", "Save", contentArea.width()-55, contentArea.height() -28, 70, 20);
+    var loadButton = windowManager.newControl("button", thisWindow, "loadBtn", "Load", 5, contentArea.height() -28, 70, 20)
     .on('click', function() {
         windowManager.newDialog('Text', textArea.val());
     });
+    
+//        thisWindow.width(500);
+//    thisWindow.height(500);
+//    windowManager.initWindow(thisWindow.attr('id').substring(5,thisWindow.attr('id').length));
+//	var textArea = windowManager.newControl("textarea", thisWindow, "txtInput", "Test", 5, 5, contentArea.width() - 15, contentArea.height() - 40);
+//	var getInputButton = windowManager.newControl("button", thisWindow, "btnGetInput", "Get Input", contentArea.width()/2 - 40, contentArea.height() -28, 70, 20)
+//    .on('click', function() {
+//        windowManager.newDialog('Text', textArea.val());
+//    });
     //var getInputButton = windowManager.newControl("button", thisWindow, "btnGetInput", "Get Input", 2, 2, 60, 30);
 }

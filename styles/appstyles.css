@@ -162,3 +162,14 @@ span:hover {
 button {
     opacity: 1;
 }
+
+.CodeMirror {
+    text-align: left;
+}
+
+h4 {
+    text-align: left;
+    margin: 0px;
+    margin-bottom: 10px;
+    margin-top: 10px;
+}
