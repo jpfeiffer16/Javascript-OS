@@ -1,15 +1,10 @@
-/*GLOBAL-TODO: Clean up inheritance structure of functions for creating new windows.
-These arbitrary functions should eventualy be completlty contained in the windowManager object.
-*/
-
-
 $('document').ready(function() {
-	for(var i = 0; i < 7; i++) {
-		$('#mainmenu ul').append('<li>Program #' + i + '</li>');
-	}
-	windowResized();
-	
-	//startTime();
+//	for(var i = 0; i < 7; i++) {
+//		$('#mainmenu ul').append('<li>Program #' + i + '</li>');
+//	}
+    
+    var programs = storageManager.loadPrograms();
+    desktop.setProgramList(storageManager.loadPrograms());
 
 	$(window).on('resize', function() {
 		windowResized();
@@ -27,24 +22,30 @@ $('document').ready(function() {
 		}
 	});
     
-    //windowManager.initWindow('test', true);
     $('#mainmenu ul li').on('click', function() {
         windowManager.runProgram($(this).text());
     });
 });
 
 
+
+var desktop = {
+    setProgramList : function(programs) {
+        for(var i = 0; i < programs.length; i++) {
+            $('#mainmenu ul').append('<li>' + replaceChar(programs[i], '_', ' ') + '</li>');
+        }
+        windowResized();
+    }
+}
+
+
 var windowManager = {
 	initWindow : function(thisWindow, draggable) {
-	    //temporary winow events: TODO implement this dynamicaly in the window handler
-		//alert(window);
 		if(draggable) {
 			$('#pgrm-' + thisWindow).draggable({handle: '#hndl-' + thisWindow});
 		}
-		//$('#test-r').resizable();
 		var container = $('#pgrm-' + thisWindow);
 		var desktop = $('#desktop');
-		// container.makeResizable();
 		var handle = container.children('#hndl-' + thisWindow);
 		var title = container.children('#ttle-' + thisWindow);
 		var content = container.children('#cont-' + thisWindow);
@@ -72,7 +73,7 @@ var windowManager = {
 		} else {
 			windowManager.newDialog('Alert', 'The program is already running!');
 		}
-		var code = storageManager.getText(programName);
+		var code = storageManager.getText('pgrm-' + programName);
 		DOMManager.insertScript(code, programName);
 		DOMManager.runScript(programName, programName);
 	},
@@ -137,18 +138,27 @@ var DOMManager = {
 
 var storageManager = {
 	getText : function(keyString) {
+        keyString = replaceChar(replaceChar(keyString, ' ', '_'),'#', '' );
         if(keyString == 'dialog') {
 		  	return "console.log(thisWindow.attr('id'));var windowWidth = thisWindow.width();console.log(windowWidth);var windowHeight = thisWindow.height();var button = thisWindow.children('#ok-button');button.height(50);button.width(windowWidth * .5);button.offset({left : thisWindow.offset().left + (windowWidth/2 - button.width()/2), top : thisWindow.offset().top + windowHeight - 60});";
-        // } else if(keyString == 'Program_5') {
-        // 	return "var textArea = windowManager.newControl('textarea', thisWindow, 'txtInput', 'Test', 5, 5, contentArea.width() - 30, contentArea.height() - 30);"
-        } 
-        else {
-        	var code = localStorage.getItem('pgrm-Program_5');
-        	//alert(code);
+        } else {
+        	var code = localStorage.getItem(keyString);
         	return code;
         }
-
-	}
+	},
+    setText : function(keyString, value) {
+        localStorage.setItem(keyString, value);
+    },
+    checkExists : function(keyString) {
+        
+    },
+    loadPrograms : function() {
+        var programs = [];
+        for(var i = 0; i < localStorage.length; i++) {
+            programs.push(localStorage.key(i).substr(5));   
+        }
+        return programs;
+    }
 }
 
 function windowResized() {
@@ -161,7 +171,6 @@ function windowResized() {
 		$('#mainmenu').height(200);
 	}
 	$('#mainmenu').offset({top : desktop.offset().top + desktop.height() - $('#taskbar').height() - $('#mainmenu').height()});
-
 }
 
 function startTime() {
@@ -189,47 +198,20 @@ function replaceChar(text, thisChar, replaceWith) {
 
 
 
-
-
-
-
-//JS constructor:'
-//    function Test() {
-//    var thisWindow = $('a');
-//
-//    var windwWidth = thisWindow.width();
-//    var windwHeight = thisWindow.height();
-//    var button = thisWindow.children('#ok-button');
-//    button.height(50);
-//    button.width(windwWidth * .5);
-//    button.offset({left : thisWindow.offset().left + (widowWidth/2 - button.width()/2), top : thisWindow.offset().top + windwHeight - 60});
-//
-//    "var windwWidth = thisWindow.width();var windwHeight = thisWindow.height();var button = thisWindow.children('#ok-button');button.height(50);button.width(windwWidth * .5);button.offset({left : thisWindow.offset().left + (widowWidth/2 - button.width()/2), top : thisWindow.offset().top + windwHeight - 60});"
-//}
-
-
-
-function test() {
-    thisWindow.width(500);
+function codeEditor(thisWindow, contentArea) {
+    thisWindow.width(800);
     thisWindow.height(500);
     windowManager.initWindow(thisWindow.attr('id').substring(5,thisWindow.attr('id').length));
-    windowManager.newControl("h4", thisWindow, "programNameLabel", "Program Name:", 5, 5, 120, 20);
-    var programName = windowManager.newControl("input type='text'", thisWindow, "programName", "Test_Program", 150, 5, 120, 20);
+    windowManager.newControl("h4", thisWindow, "programNameLabel", "Program Name:", 5, 8, 120, 20);
+    var programName = windowManager.newControl("input type='text'", thisWindow, "programName", "", 125, 5, 120, 20);
 	var textArea = CodeMirror(contentArea[0]);
-    textArea = $(textArea);
-	var saveButton = windowManager.newControl("button", thisWindow, "saveBtn", "Save", contentArea.width()-55, contentArea.height() -28, 70, 20);
+    //textArea = $(textArea);
+	var saveButton = windowManager.newControl("button", thisWindow, "saveBtn", "Save", contentArea.width()-55, contentArea.height() -28, 70, 20)
+    .on('click', function() {
+        storageManager.setText('pgrm-' + programName.val(), textArea.getValue());
+    });
     var loadButton = windowManager.newControl("button", thisWindow, "loadBtn", "Load", 5, contentArea.height() -28, 70, 20)
     .on('click', function() {
-        windowManager.newDialog('Text', textArea.val());
+        textArea.setValue(storageManager.getText('pgrm-' + programName.val()));
     });
-    
-//        thisWindow.width(500);
-//    thisWindow.height(500);
-//    windowManager.initWindow(thisWindow.attr('id').substring(5,thisWindow.attr('id').length));
-//	var textArea = windowManager.newControl("textarea", thisWindow, "txtInput", "Test", 5, 5, contentArea.width() - 15, contentArea.height() - 40);
-//	var getInputButton = windowManager.newControl("button", thisWindow, "btnGetInput", "Get Input", contentArea.width()/2 - 40, contentArea.height() -28, 70, 20)
-//    .on('click', function() {
-//        windowManager.newDialog('Text', textArea.val());
-//    });
-    //var getInputButton = windowManager.newControl("button", thisWindow, "btnGetInput", "Get Input", 2, 2, 60, 30);
 }
