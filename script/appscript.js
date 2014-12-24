@@ -4,7 +4,7 @@ $('document').ready(function() {
 //	}
     
     var programs = storageManager.loadPrograms();
-    desktop.setProgramList(storageManager.loadPrograms());
+    desktop.setProgramList(programs);
 
 	$(window).on('resize', function() {
 		windowResized();
@@ -214,4 +214,24 @@ function codeEditor(thisWindow, contentArea) {
     .on('click', function() {
         textArea.setValue(storageManager.getText('pgrm-' + programName.val()));
     });
+}
+
+function desktopSettings(thisWindow, contentArea) {
+	windowManager.newControl('h4', thisWindow, 'lbl', 'Background Image Name:', 5, 10, 200, 20);
+
+	var imageName = windowManager.newControl('input type="text"', thisWindow, 'imgName', '', 5, 30, 200, 20);
+
+	var btnSave = windowManager.newControl('button', thisWindow, 'btnSave', 'Save', thisWindow.width() - 60, thisWindow.height() - 30, 40, 20);
+
+	var currentImage = $('#desktop').css('background-image');
+
+	var char = currentImage.substring(currentImage.length - 1, currentImage.length);
+	var i = 0;
+	while(char != '/') {
+	  i = i + 1;
+	  char = currentImage.substr(currentImage.length - i, 1);
+	}
+	currentImage = currentImage.substring(i, currentImage.length - 1);
+
+	imageName.val(currentImage);
 }
