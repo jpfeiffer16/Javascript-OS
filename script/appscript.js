@@ -3,8 +3,8 @@ $('document').ready(function() {
 //		$('#mainmenu ul').append('<li>Program #' + i + '</li>');
 //	}
     
-    var programs = storageManager.loadPrograms();
-    desktop.setProgramList(programs);
+
+    desktop.setTaskMenu();
 
 	$(window).on('resize', function() {
 		windowResized();
@@ -30,9 +30,23 @@ $('document').ready(function() {
 
 
 var desktop = {
+	setTaskMenu : function () {
+		var programs = storageManager.loadPrograms();
+		var defaulPrograms = this.loadDefaultPrograms();
+		programs = programs.concat(defaulPrograms);
+    	this.setProgramList(programs);
+	},
+	loadDefaultPrograms : function () {
+		// alert('Test');
+		var defaulPrograms = ['Code Editor', 'Desktop Settings']; 
+		return defaulPrograms;
+	},
+	addProgram : function(programName) {
+		$('#mainmenu ul').append('<li>' + replaceChar(programName, '_', ' ') + '</li>');
+	},
     setProgramList : function(programs) {
         for(var i = 0; i < programs.length; i++) {
-            $('#mainmenu ul').append('<li>' + replaceChar(programs[i], '_', ' ') + '</li>');
+            this.addProgram(programs[i]);
         }
         windowResized();
     }
@@ -139,11 +153,20 @@ var DOMManager = {
 var storageManager = {
 	getText : function(keyString) {
         keyString = replaceChar(replaceChar(keyString, ' ', '_'),'#', '' );
-        if(keyString == 'dialog') {
-		  	return "console.log(thisWindow.attr('id'));var windowWidth = thisWindow.width();console.log(windowWidth);var windowHeight = thisWindow.height();var button = thisWindow.children('#ok-button');button.height(50);button.width(windowWidth * .5);button.offset({left : thisWindow.offset().left + (windowWidth/2 - button.width()/2), top : thisWindow.offset().top + windowHeight - 60});";
-        } else {
-        	var code = localStorage.getItem(keyString);
-        	return code;
+        switch(keyString) {
+        	case 'dialog':
+			  	return "console.log(thisWindow.attr('id'));var windowWidth = thisWindow.width();console.log(windowWidth);var windowHeight = thisWindow.height();var button = thisWindow.children('#ok-button');button.height(50);button.width(windowWidth * .5);button.offset({left : thisWindow.offset().left + (windowWidth/2 - button.width()/2), top : thisWindow.offset().top + windowHeight - 60});";
+        		break;
+        	case 'pgrm-Code_Editor':
+        		return 'codeEditor(thisWindow, contentArea);';
+        		break;	
+        	case 'pgrm-Desktop_Settings':
+        		return 'desktopSettings(thisWindow, contentArea);';
+        		break;
+        	default: 
+        		var code = localStorage.getItem(keyString);
+		    	return code;
+		    	break;
         }
 	},
     setText : function(keyString, value) {
