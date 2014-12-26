@@ -1,10 +1,10 @@
+var zIndexLevel = 0;
 $('document').ready(function() {
 //	for(var i = 0; i < 7; i++) {
 //		$('#mainmenu ul').append('<li>Program #' + i + '</li>');
 //	}
-    
 
-    desktop.setTaskMenu();
+    taskbar.setTaskMenu();
 
 	$(window).on('resize', function() {
 		windowResized();
@@ -25,11 +25,26 @@ $('document').ready(function() {
     $('#mainmenu ul li').on('click', function() {
         windowManager.runProgram($(this).text());
     });
+
+    // $('#desktop').on('mousedown', function(e) {
+    // 	var xPos = e.pageX;
+    // 	var yPos = e.pageY;
+    // 	$('#desktop').append('<div class="select-box"></div>');
+    // 	$('#desktop .select-box').offset({left : e.pageX, top : e.pageY});
+    // 	$('#desktop').on('mousemove', function(e) {
+    // 		$('#desktop').width(xPos - e.pageX);
+    // 		$('#desktop').height(yPos - e.pageY);
+    // 	});
+    // 	$('#desktop').on('mouseup', function(e) {
+    // 		$(this).remove('mousemove');
+    // 		$(this).remove('mouseup');
+    // 	});
+    // });
 });
 
 
 
-var desktop = {
+var taskbar = {
 	setTaskMenu : function () {
 		var programs = storageManager.loadPrograms();
 		var defaulPrograms = this.loadDefaultPrograms();
@@ -69,6 +84,11 @@ var windowManager = {
 		content.width(container.width() - 10);
 		content.height(container.height() - 35);
 		content.offset({left : container.offset().left + 5, top : container.offset().top + 30});
+		handle.on('mousedown', function() {
+			zIndexLevel++;
+			$('#pgrm-' + thisWindow).css('z-index', zIndexLevel.toString());
+			console.log(zIndexLevel.toString());
+		});
 		closeButton.on('click', function() {
 			windowManager.closeWindow($(this).parent().parent().attr('id').substring(5, this.length));
 			DOMManager.removeScript(thisWindow);
@@ -140,7 +160,7 @@ var DOMManager = {
 	},
 	removeScript : function(programName) {
 		programName = replaceChar(replaceChar(programName, ' ', '_'), '#', '');
-		$('body').remove('#scrp-' + programName);
+		$('body #scrp-' + programName).remove();
 	},
 	runScript : function(programName, windowAccess) {
 		programName = replaceChar(replaceChar(programName, ' ', '_'), '#', '');
@@ -181,6 +201,12 @@ var storageManager = {
             programs.push(localStorage.key(i).substr(5));   
         }
         return programs;
+    },
+    getSetting : function(programsName, settingName) {
+
+    },
+    setSetting : function(programName, settingName) {
+    	
     }
 }
 
@@ -242,7 +268,7 @@ function codeEditor(thisWindow, contentArea) {
 function desktopSettings(thisWindow, contentArea) {
 	windowManager.newControl('h4', thisWindow, 'lbl', 'Background Image Name:', 5, 10, 200, 20);
 
-	var imageName = windowManager.newControl('input type="text"', thisWindow, 'imgName', '', 5, 30, 200, 20);
+	//var imageName = windowManager.newControl('input type="text"', thisWindow, 'imgName', '', 5, 30, 200, 20);
 
 	var btnSave = windowManager.newControl('button', thisWindow, 'btnSave', 'Save', thisWindow.width() - 60, thisWindow.height() - 30, 40, 20);
 
@@ -254,7 +280,7 @@ function desktopSettings(thisWindow, contentArea) {
 	  i = i + 1;
 	  char = currentImage.substr(currentImage.length - i, 1);
 	}
-	currentImage = currentImage.substring(i, currentImage.length - 1);
+	currentImage = currentImage.substring(currentImage.length - i, currentImage.length - 1);
 
-	imageName.val(currentImage);
+	//imageName.val(currentImage);
 }

@@ -173,3 +173,10 @@ h4 {
     margin-bottom: 10px;
     margin-top: 10px;
 }
+
+.select-box {
+	background-color: #1B9AC5;
+	border-style: solid;
+	border-width: 1px;
+	border-color: #1296AD;
+}
