@@ -59,6 +59,10 @@ span:hover {
 	cursor: pointer;
 }
 
+#takmenu span:hover {
+	cursor: pointer;
+}
+
 #taskmenu #desc {
 	display: none;
 	position: relative;

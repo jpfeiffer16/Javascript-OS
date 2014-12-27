@@ -198,15 +198,53 @@ var storageManager = {
     loadPrograms : function() {
         var programs = [];
         for(var i = 0; i < localStorage.length; i++) {
-            programs.push(localStorage.key(i).substr(5));   
+        	if(localStorage.key(i).substr(0,4) == 'pgrm') {
+            	programs.push(localStorage.key(i).substr(5));
+        	}
         }
         return programs;
     },
-    getSetting : function(programsName, settingName) {
-
+    getSetting : function(programName, settingName) {
+    	var settingString = localStorage.getItem('sting-' + programName);
+    	var location = settingString.indexOf(settingName);
+    	if(location != -1) {
+    		var i = 1;
+    		var end = settingString.substr(location + i, 1);
+    		while(end != '}') {
+    			alert('test');
+    			i++;
+    			end = settingString.substr(location + i, 1);
+    		}
+    		return setting = settingString.substring(location + settingName.length + 1, end - 1);
+    	} else {
+    		return '';
+    	}
     },
-    setSetting : function(programName, settingName) {
+    setSetting : function(programName, settingName, settingValue) {
+    	// if (settingValue.type != String){
+    	// 	throw 'value passed to "setSetting" should be a string';
+    	// }
     	
+    	if (localStorage.getItem('stng-' + programName) == null) {
+    		localStorage.setItem('stng-' + programName, '');
+    	}
+    	var settingString = localStorage.getItem('stng-' + programName);
+    	var location = settingString.indexOf(settingName);
+    	if(location != -1) {
+    		var end = settingString.substr(location + 1, 1);
+    		while(end != '}') {
+    			end++;
+    		}
+    		var before = settingString.substring(0, location - 1);
+    		var after = settingString.substring(end + 1, settingString.length);
+    		var newSettingString = before + settingValue + after;
+    		localStorage.setItem('stng-' + programName, newSettingString);
+    		return settingValue;
+    	} else {
+    		var newSettingString = settingString + settingName + '{' + settingValue + '}';
+    		localStorage.setItem('stng-' + programName, newSettingString);
+    		return settingValue;
+    	}
     }
 }
 
@@ -283,4 +321,9 @@ function desktopSettings(thisWindow, contentArea) {
 	currentImage = currentImage.substring(currentImage.length - i, currentImage.length - 1);
 
 	//imageName.val(currentImage);
+}
+
+function settingTest(thisWindow, contentArea) {
+	alert('getting here!')
+	storageManager.setSetting('settingTest', 'Test1', 'test');
 }
