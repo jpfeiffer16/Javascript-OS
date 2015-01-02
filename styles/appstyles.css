@@ -184,3 +184,14 @@ h4 {
 	border-width: 1px;
 	border-color: #1296AD;
 }
+
+
+/*
+##### Mobile Styles
+###########################################*/
+
+@media screen and (max-width: 600px) {
+    #taskmenu, #mainmenu {
+        display: none;
+    }
+}

@@ -5,26 +5,11 @@ $('document').ready(function() {
 //	}
 
     taskbar.setTaskMenu();
-
-	$(window).on('resize', function() {
-		windowResized();
-	});
-
-	$('#taskmenu').click(function() {
-		if($(this).width() == 50) {
-			$(this).width(110);
-			$('#taskmenu #desc').fadeIn(200);
-			$('#mainmenu').show();
-			windowResized();
-		} else {
-			$('#taskmenu #desc').fadeOut(200, function() {$('#taskmenu').width(50);});
-			$('#mainmenu').hide();
-		}
-	});
     
-    $('#mainmenu ul li').on('click', function() {
-        windowManager.runProgram($(this).text());
+    $(window).on('resize', function() {
+        windowResized();
     });
+
 
     // $('#desktop').on('mousedown', function(e) {
     // 	var xPos = e.pageX;
@@ -46,10 +31,12 @@ $('document').ready(function() {
 
 var taskbar = {
 	setTaskMenu : function () {
+        $('#mainmenu ul').empty();
 		var programs = storageManager.loadPrograms();
 		var defaulPrograms = this.loadDefaultPrograms();
 		programs = programs.concat(defaulPrograms);
     	this.setProgramList(programs);
+        this.addEvents();
 	},
 	loadDefaultPrograms : function () {
 		// alert('Test');
@@ -64,6 +51,23 @@ var taskbar = {
             this.addProgram(programs[i]);
         }
         windowResized();
+    },
+    addEvents : function() {
+        $('#taskmenu').click(function() {
+            if($(this).width() == 50) {
+                $(this).width(110);
+                $('#taskmenu #desc').fadeIn(200);
+                $('#mainmenu').show();
+                windowResized();
+            } else {
+                $('#taskmenu #desc').fadeOut(200, function() {$('#taskmenu').width(50);});
+                $('#mainmenu').hide();
+            }
+        });
+
+        $('#mainmenu ul li').on('click', function() {
+            windowManager.runProgram($(this).text());
+        });
     }
 }
 
@@ -211,7 +215,6 @@ var storageManager = {
     		var i = 1;
     		var end = settingString.substr(location + i, 1);
     		while(end != '}') {
-    			alert('test');
     			i++;
     			end = settingString.substr(location + i, 1);
     		}
@@ -231,9 +234,11 @@ var storageManager = {
     	var settingString = localStorage.getItem('stng-' + programName);
     	var location = settingString.indexOf(settingName);
     	if(location != -1) {
-    		var end = settingString.substr(location + 1, 1);
+    		var i = 1;
+    		var end = settingString.substr(location + i, 1);
     		while(end != '}') {
-    			end++;
+   				i++;
+    			end = settingString.substr(location + i, 1);
     		}
     		var before = settingString.substring(0, location - 1);
     		var after = settingString.substring(end + 1, settingString.length);
@@ -295,6 +300,7 @@ function codeEditor(thisWindow, contentArea) {
     //textArea = $(textArea);
 	var saveButton = windowManager.newControl("button", thisWindow, "saveBtn", "Save", contentArea.width()-55, contentArea.height() -28, 70, 20)
     .on('click', function() {
+        taskbar.setTaskMenu();
         storageManager.setText('pgrm-' + programName.val(), textArea.getValue());
     });
     var loadButton = windowManager.newControl("button", thisWindow, "loadBtn", "Load", 5, contentArea.height() -28, 70, 20)
