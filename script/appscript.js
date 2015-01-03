@@ -4,7 +4,7 @@ $('document').ready(function() {
 //		$('#mainmenu ul').append('<li>Program #' + i + '</li>');
 //	}
 
-    taskbar.setTaskMenu();
+    taskbar.setTaskMenu(true);
     
     $(window).on('resize', function() {
         windowResized();
@@ -30,13 +30,13 @@ $('document').ready(function() {
 
 
 var taskbar = {
-	setTaskMenu : function () {
+	setTaskMenu : function (resetTaskButton) {
         $('#mainmenu ul').empty();
 		var programs = storageManager.loadPrograms();
 		var defaulPrograms = this.loadDefaultPrograms();
 		programs = programs.concat(defaulPrograms);
     	this.setProgramList(programs);
-        this.addEvents();
+        this.addEvents(resetTaskButton);
 	},
 	loadDefaultPrograms : function () {
 		// alert('Test');
@@ -52,19 +52,20 @@ var taskbar = {
         }
         windowResized();
     },
-    addEvents : function() {
-        $('#taskmenu').click(function() {
-            if($(this).width() == 50) {
-                $(this).width(110);
-                $('#taskmenu #desc').fadeIn(200);
-                $('#mainmenu').show();
-                windowResized();
-            } else {
-                $('#taskmenu #desc').fadeOut(200, function() {$('#taskmenu').width(50);});
-                $('#mainmenu').hide();
-            }
-        });
-
+    addEvents : function(resetTaskButton) {
+        if(resetTaskButton) {
+            $('#taskmenu').click(function() {
+                if($(this).width() == 50) {
+                    $(this).width(110);
+                    $('#taskmenu #desc').fadeIn(200);
+                    $('#mainmenu').show();
+                    windowResized();
+                } else {
+                    $('#taskmenu #desc').fadeOut(200, function() {$('#taskmenu').width(50);});
+                    $('#mainmenu').hide();
+                }
+            });
+        }
         $('#mainmenu ul li').on('click', function() {
             windowManager.runProgram($(this).text());
         });
@@ -300,8 +301,8 @@ function codeEditor(thisWindow, contentArea) {
     //textArea = $(textArea);
 	var saveButton = windowManager.newControl("button", thisWindow, "saveBtn", "Save", contentArea.width()-55, contentArea.height() -28, 70, 20)
     .on('click', function() {
-        taskbar.setTaskMenu();
         storageManager.setText('pgrm-' + programName.val(), textArea.getValue());
+        taskbar.setTaskMenu(false);
     });
     var loadButton = windowManager.newControl("button", thisWindow, "loadBtn", "Load", 5, contentArea.height() -28, 70, 20)
     .on('click', function() {
