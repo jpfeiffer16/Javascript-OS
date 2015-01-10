@@ -1,4 +1,7 @@
-var zIndexLevel = 0;
+var zIndexLevel = {
+	level : 0,
+	topWindow : ''
+}
 $('document').ready(function() {
 //	for(var i = 0; i < 7; i++) {
 //		$('#mainmenu ul').append('<li>Program #' + i + '</li>');
@@ -39,7 +42,6 @@ var taskbar = {
         this.addEvents(resetTaskButton);
 	},
 	loadDefaultPrograms : function () {
-		// alert('Test');
 		var defaulPrograms = ['Code Editor', 'Desktop Settings']; 
 		return defaulPrograms;
 	},
@@ -69,6 +71,27 @@ var taskbar = {
         $('#mainmenu ul li').on('click', function() {
             windowManager.runProgram($(this).text());
         });
+        $('#program-space .program-item').off('click');
+        $('#program-space .program-item').on('click', function() {
+            var windowName = $(this).attr('id');
+            var programName = windowName.substring(5, windowName.length);
+            if(!$('#pgrm-' + programName + '.minimized').length < 1){
+                if(programName == zIndexLevel.windowName) {
+                    windowManager.minimizeWindow(programName);
+                } else {
+                    windowManager.bringToFront(programName);
+                }
+            } else {
+                windowManager.minimizeWindow(programName);
+            }
+        });
+    },
+    addTask : function(programName) {
+        $('#program-space').append('<div id="icon-' + replaceChar(replaceChar(programName, '#', ''), ' ', '_') + '" class="program-item"><span>' + replaceChar(programName, '_', ' ') + '</span></div>');
+        this.setTaskMenu(false);
+    },
+    removeTask : function(programName) {
+        $('#program-space #icon-' + replaceChar(replaceChar(programName, '#', ''), ' ', '_')).remove();
     }
 }
 
@@ -90,25 +113,44 @@ var windowManager = {
 		content.height(container.height() - 35);
 		content.offset({left : container.offset().left + 5, top : container.offset().top + 30});
 		handle.on('mousedown', function() {
-			zIndexLevel++;
-			$('#pgrm-' + thisWindow).css('z-index', zIndexLevel.toString());
-			console.log(zIndexLevel.toString());
+            windowManager.bringToFront(thisWindow);
 		});
 		closeButton.on('click', function() {
-			windowManager.closeWindow($(this).parent().parent().attr('id').substring(5, this.length));
-			DOMManager.removeScript(thisWindow);
+            var program = $(this).parent().parent().attr('id');
+            var programName = program.substring(5, program.length);
+			windowManager.stopProgram(programName);
 		});
 		closeButton.offset({left : container.offset().left + container.width() - 20});
 
 	},
+    minimizeWindow : function(programName) {
+        //todo: code to minimize windows goes here.\
+        $('#pgrm-' + programName).toggleClass('minimized');
+    },
+    stopProgram : function(programName) {
+        if(this.checkIfOpen(programName)) {
+            windowManager.closeWindow($('#pgrm-' + programName).attr('id').substring(5, this.length));
+            DOMManager.removeScript(programName);
+            taskbar.removeTask(programName);
+        }
+    },
+    bringToFront : function(thisWindow) {
+        zIndexLevel.level++;
+        zIndexLevel.windowName = thisWindow;
+        $('#pgrm-' + thisWindow).css('z-index', zIndexLevel.level.toString());
+        console.log(zIndexLevel.level.toString());
+        console.log(zIndexLevel.windowName);
+    },
 	runProgram : function(programName) {
 		var programName = replaceChar(replaceChar(programName, ' ', '_'), '#', '');
 	   	var isOpen = windowManager.checkIfOpen(programName);
 	   	if(!isOpen) {
 		    $('#desktop').append(
-		        '<div id="pgrm-' + programName + '"class="window"><div id="hndl-' + programName + '" class="window-handle"><span id="ttle-' + programName + '" class="window-title">' + replaceChar(programName, '_', ' ') + '</span><span id="clos-' + programName + '" class="window-close">&#xe60e;</span></div><div id="cont-' + programName + '" class="window-content"></div></div>'
+		        '<div id="pgrm-' + programName + '"class="window loaded"><div id="hndl-' + programName + '" class="window-handle"><span id="ttle-' + programName + '" class="window-title">' + replaceChar(programName, '_', ' ') + '</span><span id="clos-' + programName + '" class="window-close">&#xe60e;</span></div><div id="cont-' + programName + '" class="window-content"></div></div>'
 		    );
 		    windowManager.initWindow(programName, true);
+            taskbar.addTask(programName);
+            windowManager.bringToFront(programName);
 		} else {
 			windowManager.newDialog('Alert', 'The program is already running!');
 		}
@@ -124,7 +166,10 @@ var windowManager = {
 		}
 	},
 	closeWindow : function(thisWindow) {
-		$('#pgrm-' + thisWindow).remove();
+        var window = $('#pgrm-' + thisWindow);
+        if(this.checkIfOpen(thisWindow)) {
+            window.remove();
+        }
 		//TODO: Remove dynamicaly loaded javascript asociated with the program
 	},
 	newDialog : function(title, text) {
@@ -154,6 +199,13 @@ var windowManager = {
 				break;
 		}
 		return element;
+	},
+	addEvent : function(windowName, element, listenTo, code) {
+		element.on(listenTo, function(e) {
+			if('pgrm-' + windowName == zIndexLevel.topWindow) {
+				code(e);
+			}
+		});
 	}
 
 }
@@ -228,7 +280,6 @@ var storageManager = {
     	// if (settingValue.type != String){
     	// 	throw 'value passed to "setSetting" should be a string';
     	// }
-    	
     	if (localStorage.getItem('stng-' + programName) == null) {
     		localStorage.setItem('stng-' + programName, '');
     	}
@@ -264,6 +315,9 @@ function windowResized() {
 		$('#mainmenu').height(200);
 	}
 	$('#mainmenu').offset({top : desktop.offset().top + desktop.height() - $('#taskbar').height() - $('#mainmenu').height()});
+    $('#program-space').height($('#taskbar').height());
+    $('#program-space').width($('#taskbar').width() - 150);
+    $('#program-space').offset({top: $('#taskbar').offset().top, left: $('#taskbar').offset().left + 150});
 }
 
 function startTime() {
@@ -311,6 +365,9 @@ function codeEditor(thisWindow, contentArea) {
 }
 
 function desktopSettings(thisWindow, contentArea) {
+	windowManager.addEvent(thisWindow, $(document), 'keydown', function(e) {
+    	alert(e.key);
+    });
 	windowManager.newControl('h4', thisWindow, 'lbl', 'Background Image Name:', 5, 10, 200, 20);
 
 	//var imageName = windowManager.newControl('input type="text"', thisWindow, 'imgName', '', 5, 30, 200, 20);
@@ -331,6 +388,6 @@ function desktopSettings(thisWindow, contentArea) {
 }
 
 function settingTest(thisWindow, contentArea) {
-	alert('getting here!')
+	alert('getting here!');
 	storageManager.setSetting('settingTest', 'Test1', 'test');
 }
