@@ -3,9 +3,6 @@ var zIndexLevel = {
 	topWindow : ''
 }
 $('document').ready(function() {
-//	for(var i = 0; i < 7; i++) {
-//		$('#mainmenu ul').append('<li>Program #' + i + '</li>');
-//	}
 
     taskbar.setTaskMenu(true);
     
@@ -13,21 +10,7 @@ $('document').ready(function() {
         windowResized();
     });
 
-
-    // $('#desktop').on('mousedown', function(e) {
-    // 	var xPos = e.pageX;
-    // 	var yPos = e.pageY;
-    // 	$('#desktop').append('<div class="select-box"></div>');
-    // 	$('#desktop .select-box').offset({left : e.pageX, top : e.pageY});
-    // 	$('#desktop').on('mousemove', function(e) {
-    // 		$('#desktop').width(xPos - e.pageX);
-    // 		$('#desktop').height(yPos - e.pageY);
-    // 	});
-    // 	$('#desktop').on('mouseup', function(e) {
-    // 		$(this).remove('mousemove');
-    // 		$(this).remove('mouseup');
-    // 	});
-    // });
+    document.oncontextmenu = function() {return false;}
 });
 
 
@@ -42,7 +25,7 @@ var taskbar = {
         this.addEvents(resetTaskButton);
 	},
 	loadDefaultPrograms : function () {
-		var defaulPrograms = ['Code Editor', 'Desktop Settings']; 
+		var defaulPrograms = ['Code Editor', 'Desktop Settings', 'Commander']; 
 		return defaulPrograms;
 	},
 	addProgram : function(programName) {
@@ -69,7 +52,7 @@ var taskbar = {
             });
         }
         $('#mainmenu ul li').on('click', function() {
-            windowManager.runProgram($(this).text());
+            windowManager.newWindow($(this).text());
         });
         $('#program-space .program-item').off('click');
         $('#program-space .program-item').on('click', function() {
@@ -84,6 +67,11 @@ var taskbar = {
             } else {
                 windowManager.minimizeWindow(programName);
             }
+        });
+        $('#program-space .program-item').on('contextmenu', function() {
+        	program = $(this).attr('id');
+        	programName = program.substring(5, program.length);
+        	windowManager.stopProgram(programName);
         });
     },
     addTask : function(programName) {
@@ -141,7 +129,7 @@ var windowManager = {
         console.log(zIndexLevel.level.toString());
         console.log(zIndexLevel.windowName);
     },
-	runProgram : function(programName) {
+	newWindow : function(programName) {
 		var programName = replaceChar(replaceChar(programName, ' ', '_'), '#', '');
 	   	var isOpen = windowManager.checkIfOpen(programName);
 	   	if(!isOpen) {
@@ -156,7 +144,8 @@ var windowManager = {
 		}
 		var code = storageManager.getText('pgrm-' + programName);
 		DOMManager.insertScript(code, programName);
-		DOMManager.runScript(programName, programName);
+		var result = DOMManager.runScript(programName, programName);
+		return result;
 	},
 	checkIfOpen : function(thisWindow) {
 		if($('#pgrm-' + thisWindow).length < 1) {
@@ -239,6 +228,9 @@ var storageManager = {
         		break;	
         	case 'pgrm-Desktop_Settings':
         		return 'desktopSettings(thisWindow, contentArea);';
+        		break;
+        	case 'pgrm-Commander':
+        		return 'commander(thisWindow, contentArea);';
         		break;
         	default: 
         		var code = localStorage.getItem(keyString);
@@ -390,4 +382,69 @@ function desktopSettings(thisWindow, contentArea) {
 function settingTest(thisWindow, contentArea) {
 	alert('getting here!');
 	storageManager.setSetting('settingTest', 'Test1', 'test');
+}
+
+function commander(thisWindow, contentArea) {
+	var content = '<div id="prompt"><div id="prompt-output" style="text-align:left;"></div><input type="text" style="position:absolute;"></input></div>';
+	contentArea.append(content);
+	contentArea.css('background-color', 'black');
+	var enteredString = '';
+	var prompt = $('#prompt');
+	var promptInput = $('#prompt input');
+	promptInput.focus();
+	// promptIput.offset({top: contentArea.offset().top + contentArea.height() - 15});
+	promptInput.on('keypress', function(e) {
+		if(e.keyCode == 13) {
+			var input = IO.input();
+			try {
+				commands[input.command.toLowerCase()](input.argument);
+			} catch(error) {
+				IO.print('Uhho.. Something is wrong with your command. I suggest you fix it..');
+			}
+			promptInput.val('');
+		}
+	});
+	var commands = {
+		echo : function(text) {
+			if(text != '' || text != undefined) {
+				IO.print(text);
+			}
+		},
+		debug : function(text) {
+			if(text == 'true') {
+				document.oncontextmenu = function() {}
+				IO.print('Debuging is enabled, default context menu will show.');
+			} else if(text == 'false') {
+				document.oncontextmenu = function() {return false;}
+				IO.print('Debuging is disabled, default context menu will not show.');
+			} else {
+				IO.print('Boolean value required!');
+			}
+		},
+		clear : function() {
+			$('#prompt #prompt-output span').remove();
+		},
+		exit : function() {
+			windowManager.stopProgram('Commander');
+		}
+	}
+	var IO = {
+		print : function(text) {
+			$('#prompt-output').append('<span>' + text + '</span>');
+		},
+		input : function() {
+			var inputValue = $('#prompt input').val();
+			var space = inputValue.indexOf(' ');
+			var inputCommand = {};
+			if(space != -1) {
+				inputCommand.command = inputValue.substring(0, space);
+				inputCommand.argument = inputValue.substring(space + 1, inputValue.length);
+			} else {
+				inputCommand.command = inputValue;
+				inputCommand.argument = '';
+			}
+			//alert(inputCommand.command +  inputCommand.argument);
+			return inputCommand;
+		}
+	}
 }
