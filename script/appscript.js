@@ -10,6 +10,10 @@ $('document').ready(function() {
         windowResized();
     });
 
+    $(this).bind('keydown', 'ctrl+shift+c', function() {
+    	windowManager.runProgram('Commander');
+    });
+
     document.oncontextmenu = function() {return false;}
 });
 
@@ -39,20 +43,25 @@ var taskbar = {
     },
     addEvents : function(resetTaskButton) {
         if(resetTaskButton) {
-            $('#taskmenu').click(function() {
+            $('#taskmenu').on('mouseover', function() {
                 if($(this).width() == 50) {
                     $(this).width(110);
                     $('#taskmenu #desc').fadeIn(200);
                     $('#mainmenu').show();
                     windowResized();
-                } else {
-                    $('#taskmenu #desc').fadeOut(200, function() {$('#taskmenu').width(50);});
-                    $('#mainmenu').hide();
                 }
+                //  else {
+                //     $('#taskmenu #desc').fadeOut(200, function() {$('#taskmenu').width(50);});
+                //     $('#mainmenu').hide();
+                // }
+            });
+            $('#mainmenu').on('mouseleave', function() {
+            	$('#taskmenu #desc').fadeOut(200, function() {$('#taskmenu').width(50);});
+                $('#mainmenu').hide();
             });
         }
         $('#mainmenu ul li').on('click', function() {
-            windowManager.newWindow($(this).text());
+            windowManager.runProgram($(this).text());
         });
         $('#program-space .program-item').off('click');
         $('#program-space .program-item').on('click', function() {
@@ -129,7 +138,7 @@ var windowManager = {
         console.log(zIndexLevel.level.toString());
         console.log(zIndexLevel.windowName);
     },
-	newWindow : function(programName) {
+	runProgram : function(programName) {
 		var programName = replaceChar(replaceChar(programName, ' ', '_'), '#', '');
 	   	var isOpen = windowManager.checkIfOpen(programName);
 	   	if(!isOpen) {
