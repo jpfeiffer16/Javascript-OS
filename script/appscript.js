@@ -10,11 +10,21 @@ $('document').ready(function() {
         windowResized();
     });
 
-    $(this).bind('keydown', 'ctrl+shift+c', function() {
+    $(this).bind('keydown', 'ctrl+shift+e', function() {
     	windowManager.runProgram('Commander');
     });
 
     document.oncontextmenu = function() {return false;}
+
+    $('#desktop').on('contextmenu', function(e) {
+    	var options = [{
+    		option : 'Desktop Settings',
+    		code : function(){
+    			alert('desktop settings');
+    		}
+    	}];
+    	var result = OSCore.newContextMenu(options, e);
+    });
 });
 
 
@@ -39,8 +49,7 @@ var taskbar = {
         for(var i = 0; i < programs.length; i++) {
             this.addProgram(programs[i]);
         }
-        windowResized();
-    },
+        windowResized();    },
     addEvents : function(resetTaskButton) {
         if(resetTaskButton) {
             $('#taskmenu').on('mouseover', function() {
@@ -50,10 +59,6 @@ var taskbar = {
                     $('#mainmenu').show();
                     windowResized();
                 }
-                //  else {
-                //     $('#taskmenu #desc').fadeOut(200, function() {$('#taskmenu').width(50);});
-                //     $('#mainmenu').hide();
-                // }
             });
             $('#mainmenu').on('mouseleave', function() {
             	$('#taskmenu #desc').fadeOut(200, function() {$('#taskmenu').width(50);});
@@ -77,10 +82,20 @@ var taskbar = {
                 windowManager.minimizeWindow(programName);
             }
         });
-        $('#program-space .program-item').on('contextmenu', function() {
-        	program = $(this).attr('id');
-        	programName = program.substring(5, program.length);
-        	windowManager.stopProgram(programName);
+        $('#program-space .program-item').on('contextmenu', function(e) {
+        	var programItem = $(this);
+        	var options = [{
+        		option : 'Close',
+        		code : function() {windowManager.stopProgram(programItem.text())}
+        	},
+        	{
+        		option : 'Min/Max-imize',
+        		code : function() {windowManager.minimizeWindow(programItem.text())}
+        	}];
+        	OSCore.newContextMenu(options, e);
+        	// program = $(this).attr('id');
+        	// programName = program.substring(5, program.length);
+        	// windowManager.stopProgram(programName);
         });
     },
     addTask : function(programName) {
@@ -92,6 +107,44 @@ var taskbar = {
     }
 }
 
+var OSCore = {
+	newContextMenu : function(options, e) {
+		// cover.css('position', 'absolute');
+		// cover.css('width', '100%');
+		// cover.css('height', '100%');
+		//cover.css('background-color', 'red');
+		if($('#context-menu').length == 0) {
+			$('#desktop').append('<div id="cover"></div>');
+			var cover = $('#desktop #cover');
+			$('#desktop').append('<div id="context-menu"><ul></ul></div>');
+			var menuContainer = $('#desktop #context-menu');
+			menuContainer.css('position', 'relative');
+			var menu = $('#desktop #context-menu ul');
+			for(var i = 0; i < options.length; i++) {
+				menu.append('<li>' + options[i].option + '</li>');
+			}
+			if(e.pageY + menuContainer.height() < $('#desktop').height()) {
+				menuContainer.offset({left: e.pageX, top: e.pageY});
+			} else {
+				menuContainer.offset({left: e.pageX, top: e.pageY - menuContainer.height()});
+			}
+			$('#desktop #context-menu ul li').on('click', function(e) {
+				var clickedValue = $(this).text();
+				var i = 0;
+				while(options[i].option != clickedValue) {
+					i++
+				}
+				cover.remove();
+				menuContainer.remove();
+				options[i].code();
+			});
+			cover.on('click', function(e) {
+				cover.remove();
+				menuContainer.remove();
+			});
+		}
+	}
+}
 
 var windowManager = {
 	initWindow : function(thisWindow, draggable) {
@@ -435,6 +488,10 @@ function commander(thisWindow, contentArea) {
 		},
 		exit : function() {
 			windowManager.stopProgram('Commander');
+		},
+		background : function(backgroundImage) {
+			$('#desktop').css('background-image', 'url(file:///C:/Users/Joe%20Pfeiffer%20LC/Dropbox/J-OS/img/' + backgroundImage + ')');
+			IO.print('Background set to ' + backgroundImage);
 		}
 	}
 	var IO = {
