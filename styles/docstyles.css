@@ -1,0 +1,10 @@
+html {
+	background-color: black;
+	color: grey;
+}
+
+.param {
+	background-color: grey;
+	color: white;
+	border-radius: 2px;
+}
