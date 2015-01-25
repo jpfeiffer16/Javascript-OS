@@ -13,6 +13,9 @@ $('document').ready(function() {
     $(this).bind('keydown', 'ctrl+shift+e', function() {
     	windowManager.runProgram('Commander');
     });
+    $(this).bind('keydown', 'ctrl+shift+a', function() {
+    	windowManager.runProgram('Code Editor');
+    });
 
     document.oncontextmenu = function() {return false;}
 
@@ -51,21 +54,30 @@ var taskbar = {
         }
         windowResized();    },
     addEvents : function(resetTaskButton) {
+    	function hideMenu() {
+        	$('#taskmenu #desc').fadeOut(200, function() {$('#taskmenu').width(50);});
+            $('#mainmenu').hide();
+        }
         if(resetTaskButton) {
             $('#taskmenu').on('mouseover', function() {
                 if($(this).width() == 50) {
                     $(this).width(110);
                     $('#taskmenu #desc').fadeIn(200);
                     $('#mainmenu').show();
+                    zIndexLevel.level++;
+                    zIndexLevel.topWindow = 'Taskbar';
+                    console.log(zIndexLevel.level);
+                    console.log(zIndexLevel.topWindow);
+                    $('#mainmenu').css('z-index', zIndexLevel.level.toString());
                     windowResized();
                 }
             });
             $('#mainmenu').on('mouseleave', function() {
-            	$('#taskmenu #desc').fadeOut(200, function() {$('#taskmenu').width(50);});
-                $('#mainmenu').hide();
+            	hideMenu();
             });
         }
         $('#mainmenu ul li').on('click', function() {
+        	hideMenu();
             windowManager.runProgram($(this).text());
         });
         $('#program-space .program-item').off('click');
@@ -86,12 +98,12 @@ var taskbar = {
         	var programItem = $(this);
         	var options = [{
         		option : 'Close',
-        		code : function() {windowManager.stopProgram(programItem.text())}
+        		code : function() {windowManager.stopProgram(programItem.text());}
         	},
         	{
         		option : 'Min/Max-imize',
-        		code : function() {windowManager.minimizeWindow(programItem.text())}
-        	}];
+        		code : function() {windowManager.minimizeWindow(programItem.text());}
+        }];
         	OSCore.newContextMenu(options, e);
         	// program = $(this).attr('id');
         	// programName = program.substring(5, program.length);
@@ -146,12 +158,12 @@ var OSCore = {
 	}
 }
 
-var windowManager = {
-	initWindow : function(thisWindow, draggable) {
+var windowManager = {	
+	initWindow : function(thisWindow, prefix, draggable) {
 		if(draggable) {
-			$('#pgrm-' + thisWindow).draggable({handle: '#hndl-' + thisWindow});
+			$('#' + prefix + '-' + thisWindow).draggable({handle: '#hndl-' + thisWindow});
 		}
-		var container = $('#pgrm-' + thisWindow);
+		var container = $('#'+ prefix + '-' + thisWindow);
 		var desktop = $('#desktop');
 		var handle = container.children('#hndl-' + thisWindow);
 		var title = container.children('#ttle-' + thisWindow);
@@ -173,11 +185,30 @@ var windowManager = {
 		closeButton.offset({left : container.offset().left + container.width() - 20});
 
 	},
+	newWindow : function(windowName, isProgram, draggable) {
+		windowName = replaceChar(windowName, ' ', '_');
+		var prefix;
+		if(isProgram) {
+			prefix = 'pgrm';
+		} else if(!isProgram) {
+			prefix = 'wndw';
+		}
+		$('#desktop').append('<div id="' + prefix + '-' + windowName + '"class="window loaded"><div id="hndl-' + windowName + '" class="window-handle"><span id="ttle-' + windowName + '" class="window-title">' + replaceChar(windowName, '_', ' ') + '</span><span id="clos-' + windowName + '" class="window-close">&#xe60e;</span></div><div id="cont-' + windowName + '" class="window-content"></div></div>');
+	    windowManager.initWindow(windowName, prefix, draggable);
+	    windowManager.bringToFront(windowName);
+	    var newWindow = $('#' + prefix + '-' + windowName);
+	    $('#clos-' + windowName).on('click', function() {
+	    	$(this).parent().parent().remove();
+	    });
+	    return newWindow;
+	},
     minimizeWindow : function(programName) {
         //todo: code to minimize windows goes here.\
+        programName = replaceChar(programName, ' ', '_');
         $('#pgrm-' + programName).toggleClass('minimized');
     },
     stopProgram : function(programName) {
+    	programName = replaceChar(programName, ' ', '_');
         if(this.checkIfOpen(programName)) {
             windowManager.closeWindow($('#pgrm-' + programName).attr('id').substring(5, this.length));
             DOMManager.removeScript(programName);
@@ -188,6 +219,7 @@ var windowManager = {
         zIndexLevel.level++;
         zIndexLevel.windowName = thisWindow;
         $('#pgrm-' + thisWindow).css('z-index', zIndexLevel.level.toString());
+        $('#wndw-' + thisWindow).css('z-index', zIndexLevel.level.toString());
         console.log(zIndexLevel.level.toString());
         console.log(zIndexLevel.windowName);
     },
@@ -198,16 +230,15 @@ var windowManager = {
 		    $('#desktop').append(
 		        '<div id="pgrm-' + programName + '"class="window loaded"><div id="hndl-' + programName + '" class="window-handle"><span id="ttle-' + programName + '" class="window-title">' + replaceChar(programName, '_', ' ') + '</span><span id="clos-' + programName + '" class="window-close">&#xe60e;</span></div><div id="cont-' + programName + '" class="window-content"></div></div>'
 		    );
-		    windowManager.initWindow(programName, true);
+		    windowManager.initWindow(programName,'pgrm', true);
+		    windowManager.bringToFront(programName);
             taskbar.addTask(programName);
-            windowManager.bringToFront(programName);
+            var code = storageManager.getText('pgrm-' + programName);
+            DOMManager.insertScript(code, programName);
+			DOMManager.runScript(programName, programName);
 		} else {
 			windowManager.newDialog('Alert', 'The program is already running!');
 		}
-		var code = storageManager.getText('pgrm-' + programName);
-		DOMManager.insertScript(code, programName);
-		var result = DOMManager.runScript(programName, programName);
-		return result;
 	},
 	checkIfOpen : function(thisWindow) {
 		if($('#pgrm-' + thisWindow).length < 1) {
@@ -217,10 +248,14 @@ var windowManager = {
 		}
 	},
 	closeWindow : function(thisWindow) {
-        var window = $('#pgrm-' + thisWindow);
-        if(this.checkIfOpen(thisWindow)) {
-            window.remove();
+		thisWindow = replaceChar(thisWindow, ' ', '_');
+        var windowToRemove = $('#pgrm-' + thisWindow);
+        if(windowToRemove.length == 0) {
+        	windowToRemove = $('#wndw-' + thisWindow);
         }
+        //if(this.checkIfOpen(thisWindow)) {
+        windowToRemove.remove();
+        //}
 		//TODO: Remove dynamicaly loaded javascript asociated with the program
 	},
 	newDialog : function(title, text) {
@@ -231,7 +266,7 @@ var windowManager = {
 	    $('#desktop').append(
 	        '<div id="pgrm-' + programName + '"class="window"><div id="hndl-' + programName + '" class="window-handle"><span id="ttle-' + programName + '" class="window-title">' + title + '</span><span id="clos-' + programName + '" class="window-close">&#xe60e;</span></div><div id="cont-' + programName + '" class="window-content"><span style="position: relative;top : 50px;">' + text + '</span><button class="button" id="ok-button" style="position:relative">Ok</button></div></div>'
 	    );
-	    windowManager.initWindow(programName, false);
+	    windowManager.initWindow(programName, 'pgrm', false);
         var code = storageManager.getText('dialog');
         DOMManager.insertScript(code, 'f' + programName);
         DOMManager.runScript('f' + programName, programName);
@@ -402,7 +437,7 @@ function replaceChar(text, thisChar, replaceWith) {
 function codeEditor(thisWindow, contentArea) {
     thisWindow.width(800);
     thisWindow.height(500);
-    windowManager.initWindow(thisWindow.attr('id').substring(5,thisWindow.attr('id').length));
+    windowManager.initWindow(thisWindow.attr('id').substring(5,thisWindow.attr('id').length, true, true), 'pgrm', true);
     windowManager.newControl("h4", thisWindow, "programNameLabel", "Program Name:", 5, 8, 120, 20);
     var programName = windowManager.newControl("input type='text'", thisWindow, "programName", "", 125, 5, 120, 20);
 	var textArea = CodeMirror(contentArea[0]);
@@ -414,8 +449,28 @@ function codeEditor(thisWindow, contentArea) {
     });
     var loadButton = windowManager.newControl("button", thisWindow, "loadBtn", "Load", 5, contentArea.height() -28, 70, 20)
     .on('click', function() {
-        textArea.setValue(storageManager.getText('pgrm-' + programName.val()));
+        //textArea.setValue(storageManager.getText('pgrm-' + programName.val()));
+        loadProgram();
     });
+    function loadProgram() {
+    	windowManager.newWindow('Select Program', false, true);
+	    var newWindow = $('#wndw-Select_Program');
+	    console.log(newWindow.length);
+	    console.log(newWindow);
+	    var contentArea = newWindow.children('.window-content');
+	    contentArea.append('<div id="program-list-container"><ul id="program-list"></ul></div>');
+	    var list = $('#program-list');
+	    var programList = storageManager.loadPrograms();
+	    for(var i = 0; i < programList.length; i++) {
+	    	list.append('<li><span>' + programList[i] + '</span></li>');
+	    }
+	    $('#program-list li').on('click', function(e) {
+	    	var program = $(this).text();
+	    	textArea.setValue(storageManager.getText('pgrm-' + program));
+	    	$('#programName').val(program);
+	    	windowManager.closeWindow('Select Program');
+	    });
+	}
 }
 
 function desktopSettings(thisWindow, contentArea) {
@@ -450,9 +505,13 @@ function commander(thisWindow, contentArea) {
 	var content = '<div id="prompt"><div id="prompt-output" style="text-align:left;"></div><input type="text" style="position:absolute;"></input></div>';
 	contentArea.append(content);
 	contentArea.css('background-color', 'black');
+	contentArea.on('click', function() {
+		$('#prompt input[type="text"]').focus();
+	});
 	var enteredString = '';
 	var prompt = $('#prompt');
 	var promptInput = $('#prompt input');
+	var lastCommand = '';
 	promptInput.focus();
 	// promptIput.offset({top: contentArea.offset().top + contentArea.height() - 15});
 	promptInput.on('keypress', function(e) {
@@ -463,7 +522,11 @@ function commander(thisWindow, contentArea) {
 			} catch(error) {
 				IO.print('Uhho.. Something is wrong with your command. I suggest you fix it..');
 			}
+			lastCommand = promptInput.val();
 			promptInput.val('');
+		} else if(e.keyCode == 92) {
+			promptInput.val(lastCommand);
+			e.preventDefault();
 		}
 	});
 	var commands = {
@@ -492,6 +555,12 @@ function commander(thisWindow, contentArea) {
 		background : function(backgroundImage) {
 			$('#desktop').css('background-image', 'url(file:///C:/Users/Joe%20Pfeiffer%20LC/Dropbox/J-OS/img/' + backgroundImage + ')');
 			IO.print('Background set to ' + backgroundImage);
+		},
+		run : function(programToRun) {
+			windowManager.runProgram(programToRun);
+		},
+		kill : function(programToKill) {
+			windowManager.stopProgram(programToKill);
 		}
 	}
 	var IO = {

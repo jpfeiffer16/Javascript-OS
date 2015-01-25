@@ -37,6 +37,7 @@ span:hover {
 	height: 35px;
 	background-color: black;
 	opacity: .7;
+	z-index: 10000;
 }
 
 #taskmenu {
@@ -316,7 +317,54 @@ h4 {
 	background-color: gray;
 }
 
+#program-list-container {
+	width: 100%;
+	height: 100%;
+}
 
+#program-list {
+	width: 100%;
+	height: 100%;
+	padding: 0px;
+	margin: 0px;
+	list-style: none;
+	overflow-y: scroll;
+}
+
+#program-list li {
+	height: 35px;
+	text-align: left;
+	cursor: pointer;
+}
+
+#program-list li span {
+	top: 7px;
+	left: 10px;
+	position: relative;
+}
+
+#program-list li:hover {
+	height: 35px;
+	text-align: left;
+	background-color: black;
+	color: white;
+	text-decoration: none;
+}
+
+::-webkit-scrollbar {
+    width: 12px;
+}
+ 
+/*::-webkit-scrollbar-track {
+    -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3); 
+    border-radius: 10px;
+}*/
+ 
+::-webkit-scrollbar-thumb {
+    /*border-radius: 10px;*/
+    /*-webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.5);*/
+    background-color: darkgrey;
+}
 
 /*
 ##### Mobile Styles
