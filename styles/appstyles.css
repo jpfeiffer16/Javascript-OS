@@ -18,6 +18,10 @@ span:hover {
 	cursor: default;
 }
 
+.icon {
+	font-family: icomoon;
+}
+
 #desktop {
 	position: absolute;
 	width: 100%;
@@ -28,6 +32,7 @@ span:hover {
 	background-repeat: none;
 	background-size: cover;
 	overflow: hidden;
+	-webkit-user-select: none;
 }
 
 #taskbar {
@@ -37,7 +42,6 @@ span:hover {
 	height: 35px;
 	background-color: black;
 	opacity: .7;
-	z-index: 10000;
 }
 
 #taskmenu {
@@ -93,10 +97,28 @@ span:hover {
 	margin-left: 4px;
 }
 
+#mainmenu ul li span.icon {
+	font-size: 12px;
+	float: right;
+	position: relative;
+	top: 3px;
+	display: none;
+	cursor: pointer;
+}
+
+#mainmenu ul li span.icon:hover {
+	color: black;
+}
+
 #mainmenu ul li:hover {
 	background-color: gray;
 	cursor: pointer;
 }
+
+#mainmenu ul li:hover span.icon {
+	display: inline;
+}
+
 
 #time {
 	color: white;
@@ -270,6 +292,10 @@ h4 {
 	font-size: 16px;
 }
 
+#prompt-output {
+	/*overflow: scroll;*/
+}
+
 #prompt span {
 	display: block;
 }
@@ -351,6 +377,14 @@ h4 {
 	text-decoration: none;
 }
 
+.dialog-button {
+	position: relative;
+	margin: 0px 40px;
+	vertical-align: bottom;
+	top: 50px;
+	padding: 4px 6px;
+}
+
 ::-webkit-scrollbar {
     width: 12px;
 }
@@ -364,6 +398,7 @@ h4 {
     /*border-radius: 10px;*/
     /*-webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.5);*/
     background-color: darkgrey;
+    border-radius: 2px;
 }
 
 /*

@@ -2,6 +2,12 @@ var zIndexLevel = {
 	level : 0,
 	topWindow : ''
 }
+
+var windowSpawn = {
+    x : $('#desktop').width() / 2,
+    y : $('#desktop').height() / 2
+}
+
 $('document').ready(function() {
 
     taskbar.setTaskMenu(true);
@@ -20,13 +26,16 @@ $('document').ready(function() {
     document.oncontextmenu = function() {return false;}
 
     $('#desktop').on('contextmenu', function(e) {
-    	var options = [{
-    		option : 'Desktop Settings',
-    		code : function(){
-    			alert('desktop settings');
+    	var options = [
+    		{
+    			option : 'Set Window Spawn',
+    			code : function(e) {
+    				windowSpawn.x = e.pageX;
+                    windowSpawn.y = e.pageY;
+    			}
     		}
-    	}];
-    	var result = OSCore.newContextMenu(options, e);
+    	];
+    	OSCore.newContextMenu(options, e);
     });
 });
 
@@ -46,7 +55,14 @@ var taskbar = {
 		return defaulPrograms;
 	},
 	addProgram : function(programName) {
-		$('#mainmenu ul').append('<li>' + replaceChar(programName, '_', ' ') + '</li>');
+		programName = replaceChar(programName, '_', ' ');
+		
+		var defaultPrograms = this.loadDefaultPrograms();
+		if(defaultPrograms.indexOf(programName) == -1) {
+			$('#mainmenu ul').append('<li><span class="program">' + programName + '</span><span class="icon">&#xe60f;</span></li>');
+		} else {
+			$('#mainmenu ul').append('<li><span class="program">' + programName + '</span></li>');
+		}
 	},
     setProgramList : function(programs) {
         for(var i = 0; i < programs.length; i++) {
@@ -68,7 +84,7 @@ var taskbar = {
                     zIndexLevel.topWindow = 'Taskbar';
                     console.log(zIndexLevel.level);
                     console.log(zIndexLevel.topWindow);
-                    $('#mainmenu').css('z-index', zIndexLevel.level.toString());
+                    $('#taskbar').css('z-index', zIndexLevel.level.toString());
                     windowResized();
                 }
             });
@@ -78,8 +94,27 @@ var taskbar = {
         }
         $('#mainmenu ul li').on('click', function() {
         	hideMenu();
-            windowManager.runProgram($(this).text());
+            windowManager.runProgram($(this).children('span.program').text());
         });
+		$('#mainmenu ul li span.icon').on('click', function(e) {
+			e.stopPropagation();
+			var programName = $(this).parent().children('span.program').text();
+			var buttons = [
+				{
+					text : 'Delete',
+					code : function() {
+						storageManager.deleteProgram(programName);
+					}
+				},
+				{
+					text : 'Cancel',
+					code : function() {
+
+					}
+				}
+			];
+			windowManager.newDialog('Alert', 'Are you sure you want to permanently delete this program?', buttons);
+		}); 
         $('#program-space .program-item').off('click');
         $('#program-space .program-item').on('click', function() {
             var windowName = $(this).attr('id');
@@ -104,10 +139,7 @@ var taskbar = {
         		option : 'Min/Max-imize',
         		code : function() {windowManager.minimizeWindow(programItem.text());}
         }];
-        	OSCore.newContextMenu(options, e);
-        	// program = $(this).attr('id');
-        	// programName = program.substring(5, program.length);
-        	// windowManager.stopProgram(programName);
+        OSCore.newContextMenu(options, e);
         });
     },
     addTask : function(programName) {
@@ -121,10 +153,6 @@ var taskbar = {
 
 var OSCore = {
 	newContextMenu : function(options, e) {
-		// cover.css('position', 'absolute');
-		// cover.css('width', '100%');
-		// cover.css('height', '100%');
-		//cover.css('background-color', 'red');
 		if($('#context-menu').length == 0) {
 			$('#desktop').append('<div id="cover"></div>');
 			var cover = $('#desktop #cover');
@@ -148,7 +176,7 @@ var OSCore = {
 				}
 				cover.remove();
 				menuContainer.remove();
-				options[i].code();
+				options[i].code(e);
 			});
 			cover.on('click', function(e) {
 				cover.remove();
@@ -237,7 +265,13 @@ var windowManager = {
             DOMManager.insertScript(code, programName);
 			DOMManager.runScript(programName, programName);
 		} else {
-			windowManager.newDialog('Alert', 'The program is already running!');
+			var buttons = [
+				{
+					text : 'Ok',
+					code : function(e) {}
+				}
+			];
+			windowManager.newDialog('Alert', 'The program is already running!', buttons);
 		}
 	},
 	checkIfOpen : function(thisWindow) {
@@ -256,20 +290,34 @@ var windowManager = {
         //if(this.checkIfOpen(thisWindow)) {
         windowToRemove.remove();
         //}
-		//TODO: Remove dynamicaly loaded javascript asociated with the program
 	},
-	newDialog : function(title, text) {
-		var temp = new Date();
-		var programName = temp.getTime().toString();
-		//var programName = replaceChar(replaceChar(id.toString(), ' ', '_'), '#', '');
-	    
-	    $('#desktop').append(
-	        '<div id="pgrm-' + programName + '"class="window"><div id="hndl-' + programName + '" class="window-handle"><span id="ttle-' + programName + '" class="window-title">' + title + '</span><span id="clos-' + programName + '" class="window-close">&#xe60e;</span></div><div id="cont-' + programName + '" class="window-content"><span style="position: relative;top : 50px;">' + text + '</span><button class="button" id="ok-button" style="position:relative">Ok</button></div></div>'
-	    );
-	    windowManager.initWindow(programName, 'pgrm', false);
-        var code = storageManager.getText('dialog');
-        DOMManager.insertScript(code, 'f' + programName);
-        DOMManager.runScript('f' + programName, programName);
+	newDialog : function(title, text, buttons, cover) {
+		var dialogName = new Date().getTime().toString() + replaceChar(title, ' ', '-');
+		var dialog = this.newWindow(dialogName, false, true);
+        thisDialog = $('#wndw-' + dialogName + ' .window-handle .window-title');
+        thisDialog.text(title);
+        this.initWindow(dialogName, 'wndw', true);
+        var contentArea = $('#wndw-' + dialogName + ' .window-content');
+        contentArea.append('<h3>' + text + '</h3>');
+        for(var i = 0; i < buttons.length; i++) {
+        	var thisButton = contentArea.append('<button class="dialog-button">' + buttons[i].text + '</button>');
+        	var buttonAtI = buttons[i];
+        	var codeToExecute = buttonAtI.code;
+
+        }
+        var dialogButtons = $('#wndw-' + dialogName + ' .dialog-button');
+    	dialogButtons.on('click', function(e) {
+    		console.log(e);
+    		// codeToExecute();
+    		var lookFor = e.toElement.innerText;
+    		for(var j = 0; j < buttons.length; j++) {
+    			if(buttons[j].text == lookFor) {
+    				$('#wndw-' + dialogName).remove();
+    				buttons[j].code(e);
+    				break;
+    			}
+    		}
+    	});
 	},
 	newControl : function(controlType, thisWindow, controlName, controlText, x, y ,width, height) {
 		thisWindow.children('.window-content').append('<' + controlType + ' id="' + controlName + '">' + controlText + '</' + controlType + '>');
@@ -310,6 +358,26 @@ var DOMManager = {
 		window[programName]($('#pgrm-' + windowAccess));
 		console.log($('#pgrm-' + windowAccess));
         console.log('this is it ^');
+	},
+	insertCssFromFile : function(programName) {
+		var fileName = 'styl-' + programName;
+		var styles = storageManager.getText(fileName);
+		$('head').append('<style>' + styles + '</style>');
+	},
+	insertCss : function(css) {
+		$('head').append('<style>' + css + '</style>');
+	},
+	insertHtmlFromFile : function(programName) {
+		var fileName = 'html-' + programName;
+		var html = storageManager.getText(fileName);
+		$('#pgrm-' + programName + '.window-content').append(html);
+	},
+	insertHtml : function(html, insertWere) {
+		if(insertWere.type == object) {
+			insertWere.append(html);
+		} else {
+			$(insertWere).append(html);
+		}
 	}
 }
 
@@ -350,6 +418,10 @@ var storageManager = {
         }
         return programs;
     },
+    deleteProgram : function(programName) {
+    	localStorage.removeItem('pgrm-' + programName);
+    	taskbar.setTaskMenu(false);
+    },
     getSetting : function(programName, settingName) {
     	var settingString = localStorage.getItem('sting-' + programName);
     	var location = settingString.indexOf(settingName);
@@ -360,7 +432,7 @@ var storageManager = {
     			i++;
     			end = settingString.substr(location + i, 1);
     		}
-    		return setting = settingString.substring(location + settingName.length + 1, end - 1);
+    		return settingString.substring(location + settingName.length + 1, location + i - 1);
     	} else {
     		return '';
     	}
@@ -369,8 +441,9 @@ var storageManager = {
     	// if (settingValue.type != String){
     	// 	throw 'value passed to "setSetting" should be a string';
     	// }
-    	if (localStorage.getItem('stng-' + programName) == null) {
-    		localStorage.setItem('stng-' + programName, '');
+    	var settingsName = 'stng-' + programName;
+    	if (localStorage.getItem(settingsName) == null) {
+    		localStorage.setItem(settingsName, '');
     	}
     	var settingString = localStorage.getItem('stng-' + programName);
     	var location = settingString.indexOf(settingName);
@@ -383,12 +456,13 @@ var storageManager = {
     		}
     		var before = settingString.substring(0, location - 1);
     		var after = settingString.substring(end + 1, settingString.length);
+    		// alert(before + ', ' + after);
     		var newSettingString = before + settingValue + after;
-    		localStorage.setItem('stng-' + programName, newSettingString);
+    		localStorage.setItem(settingsName, newSettingString);
     		return settingValue;
     	} else {
     		var newSettingString = settingString + settingName + '{' + settingValue + '}';
-    		localStorage.setItem('stng-' + programName, newSettingString);
+    		localStorage.setItem(settingsName, newSettingString);
     		return settingValue;
     	}
     }
@@ -561,6 +635,12 @@ function commander(thisWindow, contentArea) {
 		},
 		kill : function(programToKill) {
 			windowManager.stopProgram(programToKill);
+		},
+		programs : function() {
+			var programs = storageManager.loadPrograms();
+			for(var i = 0; i < programs.length; i++) {
+				IO.print(programs[i]);
+			}
 		}
 	}
 	var IO = {
