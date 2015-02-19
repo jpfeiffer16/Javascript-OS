@@ -4,8 +4,12 @@ var zIndexLevel = {
 }
 
 var windowSpawn = {
-    x : $('#desktop').width() / 2,
-    y : $('#desktop').height() / 2
+    x : 0,
+    y : 0
+}
+
+var popupID = {
+	ID : 0
 }
 
 $('document').ready(function() {
@@ -32,6 +36,16 @@ $('document').ready(function() {
     			code : function(e) {
     				windowSpawn.x = e.pageX;
                     windowSpawn.y = e.pageY;
+                    var buttons = [
+                        {
+                            text : 'Ok',
+                            code : function() {
+                                OSCore.newPopup('Test');
+                            }
+                        }
+                    ];
+                    //windowManager.newDialog('Spawn Set', 'The spawn point for windows has been set to: ' + windowSpawn.x.toString() + ',' + windowSpawn.y.toString(),buttons);
+                    OSCore.newPopup('The spawn point for new windows has been set to: ' + windowSpawn.x.toString() + ',' + windowSpawn.y.toString());
     			}
     		}
     	];
@@ -104,6 +118,7 @@ var taskbar = {
 					text : 'Delete',
 					code : function() {
 						storageManager.deleteProgram(programName);
+                        OSCore.newPopup('Program "' + programName + '" deleted');
 					}
 				},
 				{
@@ -154,6 +169,7 @@ var taskbar = {
 var OSCore = {
 	newContextMenu : function(options, e) {
 		if($('#context-menu').length == 0) {
+            var originalEvent = Object.create(e);
 			$('#desktop').append('<div id="cover"></div>');
 			var cover = $('#desktop #cover');
 			$('#desktop').append('<div id="context-menu"><ul></ul></div>');
@@ -172,16 +188,75 @@ var OSCore = {
 				var clickedValue = $(this).text();
 				var i = 0;
 				while(options[i].option != clickedValue) {
-					i++
+					i++;
 				}
 				cover.remove();
 				menuContainer.remove();
-				options[i].code(e);
+				options[i].code(originalEvent);
 			});
 			cover.on('click', function(e) {
 				cover.remove();
 				menuContainer.remove();
 			});
+		}
+	},
+    newPopup : function(text, delay) {
+		var id = this.addPopup(text);
+		setTimeout(function() {
+			OSCore.removePopup(id);
+		}, delay ? delay: 4000);
+//        var desktop = $('#desktop');
+//        var taskbar = $('#taskbar');
+//        desktop.append('<div class="jos-popup"><p>' + text + '</p></div>');
+//        var container = $('.jos-popup');
+//        var message = $('.jos-popup p');
+//        container.offset({left: desktop.width() - container.width(), top: desktop.height() - taskbar.height() - container.height()});
+//        container.css('opacity', '0');
+//        zIndexLevel.level++;
+//        zIndexLevel.topWindow = 'Popup';
+//        container.css('z-index', zIndexLevel.level.toString());
+//        console.log(zIndexLevel.level);
+//        console.log(zIndexLevel.topWindow);
+//        container.fadeTo(400, .5);
+//        if(delay != undefined) {
+//            setTimeout(function() {
+//                container.fadeOut(4000, function() {container.remove()});
+//            }, delay);
+//        } else {
+//            setTimeout(function() {
+//                container.fadeOut(4000, function() {container.remove();});
+//            }, 7000);
+//        }
+    },
+	addPopup : function(text) {
+		var popupPane = $('#popup-pane');
+		popupID.ID++;
+		var popup = popupPane.append('<div id="popup-' + popupID.ID + '"class="jos-popup"><p>' + text + '</p></div>');
+		popup.css('opacity', '0');
+		this.formatPopups();
+		popup.fadeTo(400, .9);
+		return popupID.ID;
+	},
+	removePopup : function(id) {
+		var thisPopup = $('#popup-pane #popup-' + id);
+		thisPopup.fadeOut(4000, function() {
+			thisPopup.remove();
+			OSCore.formatPopups();
+		});
+	},
+	formatPopups : function() {
+		var popups = $('#popup-pane .jos-popup');
+		var desktop = $('#desktop');
+		var taskbar = $('#taskbar');
+		var i = 0;
+		var j = 0;
+		popupArray = document.getElementsByClassName('jos-popup');
+		while(i < popupArray.length) {
+			popupArray[i].style.bottom = j;
+			var temp = popupArray[i].style;
+			temp.bottom = j.toString() + 'px';
+			j += popupArray[i].offsetHeight + 5;
+			i++;
 		}
 	}
 }
@@ -197,7 +272,11 @@ var windowManager = {
 		var title = container.children('#ttle-' + thisWindow);
 		var content = container.children('#cont-' + thisWindow);
 		var closeButton = handle.children('#clos-' + thisWindow);
-		container.offset({left : desktop.width() / 2 - container.width()/2 , top : desktop.height() / 2 - container.height()/2})
+        if((windowSpawn.x == 0 || windowSpawn.y == 0) || prefix == 'wndw') {
+            container.offset({left : desktop.width() / 2 - container.width()/2 , top : desktop.height() / 2 - container.height()/2});
+        } else {
+            container.offset({left : windowSpawn.x , top : windowSpawn.y});
+        }
 		handle.height(30);
 		content.width(container.width() - 10);
 		content.height(container.height() - 35);

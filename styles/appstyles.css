@@ -14,6 +14,14 @@ body {
 	margin: 0px;
 }
 
+/*Clearfix*/
+
+.group:after {
+  content: "";
+  display: table;
+  clear: both;
+}
+
 span:hover {
 	cursor: default;
 }
@@ -383,6 +391,32 @@ h4 {
 	vertical-align: bottom;
 	top: 50px;
 	padding: 4px 6px;
+}
+
+.jos-popup {
+    position: absolute;
+    height: auto;
+    background-color: DarkSlateGray;
+    border-radius: 5px;
+    opacity: .5;
+    width: 200px;
+/*    visibility: hidden;*/
+	transition: bottom 400ms;
+}
+
+.jos-popup p {
+    over-wrap: break-word;
+    margin: 10px 10px;
+    color: white;
+/*    opacity: 1;*/
+}
+
+#popup-pane {
+    height: 100%;
+    width: 202px;
+    float: right;
+    position: relative;
+    bottom: 35px;
 }
 
 ::-webkit-scrollbar {
