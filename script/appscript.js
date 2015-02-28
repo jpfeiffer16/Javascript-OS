@@ -44,7 +44,6 @@ $('document').ready(function() {
                             }
                         }
                     ];
-                    //windowManager.newDialog('Spawn Set', 'The spawn point for windows has been set to: ' + windowSpawn.x.toString() + ',' + windowSpawn.y.toString(),buttons);
                     OSCore.newPopup('The spawn point for new windows has been set to: ' + windowSpawn.x.toString() + ',' + windowSpawn.y.toString());
     			}
     		}
@@ -205,28 +204,6 @@ var OSCore = {
 		setTimeout(function() {
 			OSCore.removePopup(id);
 		}, delay ? delay: 4000);
-//        var desktop = $('#desktop');
-//        var taskbar = $('#taskbar');
-//        desktop.append('<div class="jos-popup"><p>' + text + '</p></div>');
-//        var container = $('.jos-popup');
-//        var message = $('.jos-popup p');
-//        container.offset({left: desktop.width() - container.width(), top: desktop.height() - taskbar.height() - container.height()});
-//        container.css('opacity', '0');
-//        zIndexLevel.level++;
-//        zIndexLevel.topWindow = 'Popup';
-//        container.css('z-index', zIndexLevel.level.toString());
-//        console.log(zIndexLevel.level);
-//        console.log(zIndexLevel.topWindow);
-//        container.fadeTo(400, .5);
-//        if(delay != undefined) {
-//            setTimeout(function() {
-//                container.fadeOut(4000, function() {container.remove()});
-//            }, delay);
-//        } else {
-//            setTimeout(function() {
-//                container.fadeOut(4000, function() {container.remove();});
-//            }, 7000);
-//        }
     },
 	addPopup : function(text) {
 		var popupPane = $('#popup-pane');
@@ -632,8 +609,6 @@ function desktopSettings(thisWindow, contentArea) {
     });
 	windowManager.newControl('h4', thisWindow, 'lbl', 'Background Image Name:', 5, 10, 200, 20);
 
-	//var imageName = windowManager.newControl('input type="text"', thisWindow, 'imgName', '', 5, 30, 200, 20);
-
 	var btnSave = windowManager.newControl('button', thisWindow, 'btnSave', 'Save', thisWindow.width() - 60, thisWindow.height() - 30, 40, 20);
 
 	var currentImage = $('#desktop').css('background-image');
@@ -646,7 +621,6 @@ function desktopSettings(thisWindow, contentArea) {
 	}
 	currentImage = currentImage.substring(currentImage.length - i, currentImage.length - 1);
 
-	//imageName.val(currentImage);
 }
 
 function settingTest(thisWindow, contentArea) {
@@ -737,7 +711,6 @@ function commander(thisWindow, contentArea) {
 				inputCommand.command = inputValue;
 				inputCommand.argument = '';
 			}
-			//alert(inputCommand.command +  inputCommand.argument);
 			return inputCommand;
 		}
 	}
