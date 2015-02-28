@@ -604,27 +604,15 @@ function codeEditor(thisWindow, contentArea) {
 }
 
 function desktopSettings(thisWindow, contentArea) {
-	windowManager.addEvent(thisWindow, $(document), 'keydown', function(e) {
-    	alert(e.key);
-    });
-	windowManager.newControl('h4', thisWindow, 'lbl', 'Background Image Name:', 5, 10, 200, 20);
-
-	var btnSave = windowManager.newControl('button', thisWindow, 'btnSave', 'Save', thisWindow.width() - 60, thisWindow.height() - 30, 40, 20);
-
-	var currentImage = $('#desktop').css('background-image');
-
-	var char = currentImage.substring(currentImage.length - 1, currentImage.length);
-	var i = 0;
-	while(char != '/') {
-	  i = i + 1;
-	  char = currentImage.substr(currentImage.length - i, 1);
-	}
-	currentImage = currentImage.substring(currentImage.length - i, currentImage.length - 1);
-
+	var interfaceHtml = '<label for="instance-name">Instance Name:</label><input id="instance-name" type="text"><button id="desktop-settings-submit" style="position:absolute; bottom:0px;right:0px;">Save</button>';
+	contentArea.append(interfaceHtml);
+	$('#desktop-settings-submit').on('click', function(e) {
+		var instanceName = $('instance-name').val();
+		storageManager.setSetting('instance-name', 'instance-name', instanceName);
+	});
 }
 
 function settingTest(thisWindow, contentArea) {
-	alert('getting here!');
 	storageManager.setSetting('settingTest', 'Test1', 'test');
 }
 
